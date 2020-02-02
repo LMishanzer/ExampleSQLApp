@@ -26,7 +26,7 @@ namespace ExampleSQLApp
 
             passwordConfirmField.UseSystemPasswordChar = false;
             passwordConfirmField.ForeColor = Color.Gray;
-            passwordConfirmField.Text = "Enter your password again";
+            passwordConfirmField.Text = "Repeate your password";
         }
 
         private void closeButton_Click(object sender, EventArgs e)
@@ -80,7 +80,7 @@ namespace ExampleSQLApp
 
         private void passwordConfirmField_Enter(object sender, EventArgs e)
         {
-            if (passwordConfirmField.Text == "Enter your password again")
+            if (passwordConfirmField.Text == "Repeate your password")
             {
                 passwordConfirmField.UseSystemPasswordChar = true;
                 passwordConfirmField.ForeColor = Color.Black;
@@ -113,23 +113,51 @@ namespace ExampleSQLApp
             {
                 passwordConfirmField.UseSystemPasswordChar = false;
                 passwordConfirmField.ForeColor = Color.Gray;
-                passwordConfirmField.Text = "Enter your password again";
+                passwordConfirmField.Text = "Repeate your password";
             }
         }
 
         private void registerButton_Click(object sender, EventArgs e)
         {
-            DB db = new DB();
+            if(loginRegField.Text == "Enter your login")
+            {
+                MessageBox.Show("Enter your login, please");
+                return;
+            }
+
+            if(passwordRegField.Text == "Enter your password")
+            {
+                MessageBox.Show("Enter your password, please");
+                return;
+            }
+
+            if(passwordConfirmField.Text == "Repeate your password")
+            {
+                MessageBox.Show("Repeat your password, please");
+                return;
+            }
+
+            if(isUserExists())
+                return;
 
             if (passwordRegField.Text == passwordConfirmField.Text)
             {
+                DB db = new DB();
+
                 MySqlCommand command = new MySqlCommand("INSERT INTO `users` (`login`, `password`) VALUES (@uL, @uP)", db.getConnection());
                 command.Parameters.Add("@uL", MySqlDbType.VarChar).Value = loginRegField.Text;
                 command.Parameters.Add("@uP", MySqlDbType.VarChar).Value = passwordRegField.Text;
 
                 db.openConnection();
 
-
+                if(command.ExecuteNonQuery() == 1)
+                {
+                    MessageBox.Show("Account was created");
+                }
+                else 
+                {
+                    MessageBox.Show("Oops! Something went wrong");
+                }
 
                 db.closeConnection();
             }
@@ -137,6 +165,29 @@ namespace ExampleSQLApp
             {
                 MessageBox.Show("Passwords don't match!");
             }
+        }
+
+        private Boolean isUserExists()
+        {
+            DB db = new DB();
+
+            DataTable table = new DataTable();
+
+            MySqlDataAdapter adapter = new MySqlDataAdapter();
+
+            MySqlCommand command = new MySqlCommand("SELECT * FROM `users` WHERE `login` = @uL", db.getConnection());
+
+            command.Parameters.Add("@uL", MySqlDbType.VarChar).Value = loginRegField.Text;
+
+            adapter.SelectCommand = command;
+            adapter.Fill(table);
+
+            if (table.Rows.Count > 0)
+            {
+                MessageBox.Show("User with the same login is already exists");
+                return true;
+            }
+            return false;
         }
     }
 }
